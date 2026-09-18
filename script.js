@@ -7,6 +7,22 @@ const xpFill = document.getElementById('xpFill');
 const biomeLabel = document.getElementById('biomeLabel');
 const distanceLabel = document.getElementById('distanceLabel');
 
+const BIOMES = [
+  '초원',
+  '붉은 사막',
+  '열대 정글',
+  '빙결 지대',
+  '거대 균사림',
+  '화산 지대',
+  '심해 균열',
+  '수정 해저',
+  '독성 습지',
+  '고대 폐허',
+];
+
+const WORLD_SEGMENT_MIN = 10000;
+const WORLD_SEGMENT_MAX = 15000;
+
 const state = {
   level: 1,
   xp: 0,
@@ -32,7 +48,22 @@ const state = {
   touchPointerId: null,
 };
 
-const biomes = ['초원', '붉은 사막', '열대 정 jungle', '빙결 지대'];
+const world = {
+  segments: [],
+};
+
+const biomePalettes = {
+  초원: { skyTop: '#8ad5a1', skyMid: '#b9e8a0', skyBottom: '#7ea388', foodHue: [42, 118], accent: '#9cff8a' },
+  '붉은 사막': { skyTop: '#d99a68', skyMid: '#e7c180', skyBottom: '#8b5d3a', foodHue: [18, 42], accent: '#ffd166' },
+  '열대 정글': { skyTop: '#45b18a', skyMid: '#77d38d', skyBottom: '#1d6b53', foodHue: [90, 150], accent: '#6ef7c1' },
+  '빙결 지대': { skyTop: '#6ea7d9', skyMid: '#aeebff', skyBottom: '#3a5e85', foodHue: [185, 220], accent: '#d8f4ff' },
+  '거대 균사림': { skyTop: '#4d8d66', skyMid: '#7ebb7c', skyBottom: '#285a3f', foodHue: [120, 160], accent: '#b7ff9e' },
+  '화산 지대': { skyTop: '#7a3342', skyMid: '#db6f4e', skyBottom: '#3a1b1a', foodHue: [0, 26], accent: '#ffb066' },
+  '심해 균열': { skyTop: '#0f234d', skyMid: '#204d7f', skyBottom: '#091426', foodHue: [205, 245], accent: '#73d7ff' },
+  '수정 해저': { skyTop: '#3d5e7a', skyMid: '#7fd6d5', skyBottom: '#173c52', foodHue: [150, 190], accent: '#a8ffe6' },
+  '독성 습지': { skyTop: '#457b51', skyMid: '#78c892', skyBottom: '#234c2f', foodHue: [110, 130], accent: '#d2ff7a' },
+  '고대 폐허': { skyTop: '#625c7e', skyMid: '#8c8bb1', skyBottom: '#2d2b42', foodHue: [265, 325], accent: '#d8b6ff' },
+};
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -42,6 +73,10 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+function randomInt(min, max) {
+  return Math.floor(randomBetween(min, max + 1));
+}
+
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
   canvas.width = Math.floor(canvas.clientWidth * ratio);
@@ -49,31 +84,88 @@ function resizeCanvas() {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 }
 
+function getSegmentAtX(x) {
+  for (let i = world.segments.length - 1; i >= 0; i -= 1) {
+    const segment = world.segments[i];
+    if (x >= segment.start && x < segment.end) {
+      return segment;
+    }
+  }
+  return world.segments[0] || { biome: '초원', start: 0, end: 12000 };
+}
+
 function getBiomeName(x) {
-  const absoluteX = Math.abs(x);
-  if (absoluteX < 12000) return '초원';
-  if (absoluteX < 24000) return '붉은 사막';
-  if (absoluteX < 36000) return '열대 정글';
-  return '빙결 지대';
+  return getSegmentAtX(x).biome;
+}
+
+function getBiomePaletteName(x) {
+  return getBiomeName(x);
+}
+
+function appendWorldSegment() {
+  const last = world.segments[world.segments.length - 1];
+  const start = last ? last.end : 0;
+  const length = randomInt(WORLD_SEGMENT_MIN, WORLD_SEGMENT_MAX);
+  const biome = BIOMES[randomInt(0, BIOMES.length - 1)];
+
+  world.segments.push({
+    start,
+    end: start + length,
+    length,
+    biome,
+  });
+}
+
+function prependWorldSegment() {
+  const first = world.segments[0];
+  const end = first ? first.start : 0;
+  const length = randomInt(WORLD_SEGMENT_MIN, WORLD_SEGMENT_MAX);
+  const start = end - length;
+  const biome = BIOMES[randomInt(0, BIOMES.length - 1)];
+
+  world.segments.unshift({
+    start,
+    end,
+    length,
+    biome,
+  });
+}
+
+function ensureWorldCoverage() {
+  if (!world.segments.length) {
+    world.segments.push({ start: 0, end: 12000, length: 12000, biome: '초원' });
+  }
+
+  while (state.player.x + 30000 > world.segments[world.segments.length - 1].end) {
+    appendWorldSegment();
+  }
+
+  while (state.player.x - 20000 < world.segments[0].start) {
+    prependWorldSegment();
+  }
 }
 
 function createFood() {
+  const biome = getBiomeName(state.player.x);
+  const profile = biomePalettes[biome] || biomePalettes.초원;
   const radius = randomBetween(6, 12);
-  const spawnX = state.player.x + randomBetween(-1200, 1200);
+  const xBias = randomBetween(-1400, 1400);
+  const spawnX = state.player.x + xBias;
   const spawnY = randomBetween(-190, 190);
-  const value = Math.random() < 0.2 ? 18 : 10;
+  const value = Math.random() < 0.18 ? 18 : 10;
 
   state.foods.push({
     x: spawnX,
     y: spawnY,
     radius,
     value,
-    hue: randomBetween(45, 140),
+    hue: randomInt(profile.foodHue[0], profile.foodHue[1]),
+    biome,
   });
 }
 
 function populateFoodField() {
-  while (state.foods.length < 28) {
+  while (state.foods.length < 32) {
     createFood();
   }
 }
@@ -91,8 +183,9 @@ function levelUpIfNeeded() {
 function updateHud() {
   levelValue.textContent = state.level;
   xpFill.style.width = `${(state.xp / state.xpToNext) * 100}%`;
-  biomeLabel.textContent = getBiomeName(state.player.x);
-  distanceLabel.textContent = `${Math.abs(Math.floor(state.player.x))}m`;
+  const currentBiome = getBiomeName(state.player.x);
+  biomeLabel.textContent = currentBiome;
+  distanceLabel.textContent = `${Math.floor(Math.abs(state.player.x))}m`;
 }
 
 function findNearestFood() {
@@ -185,6 +278,8 @@ joystickBase.addEventListener('pointercancel', () => {
 });
 
 function update(dt) {
+  ensureWorldCoverage();
+
   let moveX = 0;
   let moveY = 0;
 
@@ -214,7 +309,6 @@ function update(dt) {
   state.player.x += directionX * speed * (moveLength || 0);
   state.player.y += directionY * speed * (moveLength || 0);
 
-  state.player.x = clamp(state.player.x, -100000, 100000);
   state.player.y = clamp(state.player.y, -260, 260);
 
   state.cameraX = state.player.x - canvas.clientWidth / 2;
@@ -231,20 +325,24 @@ function update(dt) {
     }
   }
 
-  while (state.foods.length < 28) {
+  while (state.foods.length < 32) {
     createFood();
   }
+
+  updateHud();
 }
 
 function drawBackground() {
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
+  const currentBiome = getBiomeName(state.player.x);
+  const palette = biomePalettes[currentBiome] || biomePalettes.초원;
 
   const sky = ctx.createLinearGradient(0, 0, 0, height);
-  sky.addColorStop(0, '#8ad5a1');
-  sky.addColorStop(0.2, '#b9e8a0');
-  sky.addColorStop(0.5, '#dfe7b4');
-  sky.addColorStop(1, '#7ea388');
+  sky.addColorStop(0, palette.skyTop);
+  sky.addColorStop(0.28, palette.skyMid);
+  sky.addColorStop(0.62, palette.skyBottom);
+  sky.addColorStop(1, '#1b2a25');
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, width, height);
 
@@ -264,6 +362,27 @@ function drawBackground() {
     ctx.moveTo(x, 0);
     ctx.lineTo(x, height);
     ctx.stroke();
+  }
+}
+
+function drawWorldBoundaries() {
+  for (const segment of world.segments) {
+    const left = segment.start - state.cameraX;
+    const right = segment.end - state.cameraX;
+
+    if (right < -200 || left > canvas.clientWidth + 200) {
+      continue;
+    }
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(left, 0);
+    ctx.lineTo(left, canvas.clientHeight);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(left, 0, Math.max(0, right - left), canvas.clientHeight);
   }
 }
 
@@ -308,6 +427,7 @@ function drawPlayer() {
 function render() {
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   drawBackground();
+  drawWorldBoundaries();
 
   for (const food of state.foods) {
     drawFood(food);
@@ -329,6 +449,7 @@ function gameLoop(timestamp) {
 window.addEventListener('resize', resizeCanvas);
 
 resizeCanvas();
+ensureWorldCoverage();
 populateFoodField();
 updateHud();
 requestAnimationFrame(gameLoop);
