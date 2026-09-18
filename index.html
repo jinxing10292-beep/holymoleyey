@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Evolution Online - Phase 1</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="game-shell">
+      <header class="hud">
+        <div class="hud-row top-row">
+          <div class="level-wrap">
+            <span class="label">Lv.</span>
+            <span id="levelValue">1</span>
+          </div>
+          <div class="xp-bar">
+            <div id="xpFill"></div>
+          </div>
+        </div>
+        <div class="hud-row metadata">
+          <span id="biomeLabel">초원</span>
+          <span id="distanceLabel">0m</span>
+        </div>
+      </header>
+
+      <canvas id="gameCanvas"></canvas>
+
+      <div id="joystickZone" aria-label="movement joystick">
+        <div id="joystickBase">
+          <div id="joystickKnob"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
