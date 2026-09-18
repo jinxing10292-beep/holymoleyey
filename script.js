@@ -6,6 +6,13 @@ const levelValue = document.getElementById('levelValue');
 const xpFill = document.getElementById('xpFill');
 const biomeLabel = document.getElementById('biomeLabel');
 const distanceLabel = document.getElementById('distanceLabel');
+const cellSelectOverlay = document.getElementById('cellSelectOverlay');
+const evolutionOverlay = document.getElementById('evolutionOverlay');
+const evolutionChoices = document.getElementById('evolutionChoices');
+const evolutionLevelText = document.getElementById('evolutionLevelText');
+const evolutionStageText = document.getElementById('evolutionStageText');
+const cellStatusText = document.getElementById('cellStatusText');
+const evolutionStatusText = document.getElementById('evolutionStatusText');
 
 const BIOMES = [
   '초원',
@@ -20,10 +27,111 @@ const BIOMES = [
   '고대 폐허',
 ];
 
+const EVOLUTION_STAGE3_PROFILES = {
+  질주형: { summary: '폭주형과 질풍형으로 이어지는 기동 진화', speed: 1.22, size: 4, color: '#97f8ff', stage4: ['폭주형', '질풍형'], stage5: ['광폭종', '천풍종'] },
+  사냥형: { summary: '포식형과 추적형으로 이어지는 공격 진화', speed: 1.18, size: 3, color: '#ffc49d', stage4: ['포식형', '추적형'], stage5: ['대포식종', '추적종'] },
+  유목형: { summary: '방랑형과 개척형으로 이어지는 탐험 진화', speed: 1.14, size: 2, color: '#d5ff9a', stage4: ['방랑형', '개척형'], stage5: ['대륙방랑종', '개척종'] },
+  덩굴형: { summary: '재생형과 거대덩굴형으로 이어지는 생존 진화', speed: 1.1, size: 5, color: '#8ef7a4', stage4: ['재생형', '거대덩굴형'], stage5: ['불멸균종', '거대목종'] },
+  거목형: { summary: '고목형과 세계수형으로 이어지는 고급 성장 진화', speed: 1.07, size: 6, color: '#bbff9d', stage4: ['고목형', '세계수형'], stage5: ['고대목종', '세계수종'] },
+  균사형: { summary: '대균사형과 독포자형으로 이어지는 확산 진화', speed: 1.12, size: 4, color: '#d3ff8a', stage4: ['대균사형', '독포자형'], stage5: ['균사군체종', '맹독포자종'] },
+  갑각형: { summary: '중갑형과 가시갑각형으로 이어지는 방어 진화', speed: 1.02, size: 7, color: '#c0d9ff', stage4: ['중갑형', '가시갑각형'], stage5: ['중장갑종', '가시갑주종'] },
+  철갑형: { summary: '요새형과 전투갑각형으로 이어지는 방어형 진화', speed: 0.98, size: 8, color: '#bfd7ff', stage4: ['요새형', '전투갑각형'], stage5: ['성채종', '전쟁갑각종'] },
+  결정형: { summary: '마력결정형과 거대결정형으로 이어지는 에너지 진화', speed: 1.16, size: 5, color: '#d8b8ff', stage4: ['마력결정형', '거대결정형'], stage5: ['마력결정종', '거대결정종'] },
+  질주유영형: { summary: '초고속유영종과 대양방랑종으로 이어짐', speed: 1.3, size: 3, color: '#9ce6ff', stage4: ['초고속유영종', '대양방랑종'], stage5: ['초고속유영종', '대양방랑종'] },
+  회피유영형: { summary: '회피전문종으로 이어지는 민첩 진화', speed: 1.25, size: 2, color: '#9cefc7', stage4: ['회피전문종'], stage5: ['회피전문종'] },
+  장거리유영형: { summary: '대양방랑종으로 이어지는 장거리 진화', speed: 1.2, size: 3, color: '#bceeff', stage4: ['대양방랑종'], stage5: ['대양방랑종'] },
+  거대산호형: { summary: '산호거체종과 해저갑주종으로 이어짐', speed: 1.05, size: 7, color: '#9ef7d2', stage4: ['산호거체종', '해저갑주종'], stage5: ['산호거체종', '해저갑주종'] },
+  경질산호형: { summary: '해저갑주종으로 이어지는 방어형 진화', speed: 1.0, size: 8, color: '#c4f5d8', stage4: ['해저갑주종'], stage5: ['해저갑주종'] },
+  재생산호형: { summary: '불멸산호종으로 이어지는 회복형 진화', speed: 1.08, size: 5, color: '#7cf7cb', stage4: ['불멸산호종'], stage5: ['불멸산호종'] },
+  추적포식형: { summary: '해양추적종으로 이어지는 추적형 진화', speed: 1.18, size: 4, color: '#ffb8d9', stage4: ['해양추적종'], stage5: ['해양추적종'] },
+  돌진포식형: { summary: '해양돌격종으로 이어지는 돌진형 진화', speed: 1.28, size: 4, color: '#ff9fc7', stage4: ['해양돌격종'], stage5: ['해양돌격종'] },
+  군체포식형: { summary: '군체사냥종으로 이어지는 집단형 진화', speed: 1.15, size: 5, color: '#ffd6a9', stage4: ['군체사냥종'], stage5: ['군체사냥종'] },
+  압력적응형: { summary: '초압력적응종으로 이어지는 심해 적응 진화', speed: 1.12, size: 5, color: '#9ea8ff', stage4: ['초압력적응종'], stage5: ['초압력적응종'] },
+  심연잠복형: { summary: '심연잠복종으로 이어지는 은신 진화', speed: 1.14, size: 4, color: '#a7c8ff', stage4: ['심연잠복종'], stage5: ['심연잠복종'] },
+  심연재생형: { summary: '심연재생종으로 이어지는 회복 진화', speed: 1.08, size: 6, color: '#a7f6d0', stage4: ['심연재생종'], stage5: ['심연재생종'] },
+  중괴수형: { summary: '대형괴수종으로 이어지는 압도형 진화', speed: 1.0, size: 8, color: '#cfb1ff', stage4: ['대형괴수종'], stage5: ['대형괴수종'] },
+  포식괴수형: { summary: '심연포식종으로 이어지는 포식 진화', speed: 1.22, size: 5, color: '#ffc0d4', stage4: ['심연포식종'], stage5: ['심연포식종'] },
+  돌격괴수형: { summary: '심연돌격종으로 이어지는 돌진 진화', speed: 1.26, size: 6, color: '#ffb7ae', stage4: ['심연돌격종'], stage5: ['심연돌격종'] },
+  강광발광형: { summary: '강광발광종으로 이어지는 광원 진화', speed: 1.16, size: 3, color: '#8fffe0', stage4: ['강광발광종'], stage5: ['강광발광종'] },
+  유인발광형: { summary: '유혹발광종으로 이어지는 유인 진화', speed: 1.12, size: 3, color: '#b8ffdd', stage4: ['유혹발광종'], stage5: ['유혹발광종'] },
+  탐색발광형: { summary: '심해탐색종으로 이어지는 탐색 진화', speed: 1.2, size: 3, color: '#9ce9ff', stage4: ['심해탐색종'], stage5: ['심해탐색종'] },
+};
+
+const EVOLUTION_TREE = {
+  ground: {
+    label: '지상 세포',
+    baseSpeed: 120,
+    baseColor: '#5ee2ff',
+    glow: '#7ef7a6',
+    stage2: [
+      { name: '초원형', summary: '기동성과 탐색에 특화', speed: 1.1, size: 2, color: '#8ef0ff', stage3: ['질주형', '사냥형', '유목형'] },
+      { name: '수목형', summary: '체력과 회복에 특화', speed: 0.95, size: 4, color: '#9bf7a2', stage3: ['덩굴형', '거목형', '균사형'] },
+      { name: '암석형', summary: '방어와 공격에 특화', speed: 0.9, size: 6, color: '#b7d1ff', stage3: ['갑각형', '철갑형', '결정형'] },
+    ],
+  },
+  ocean: {
+    label: '해양 세포',
+    baseSpeed: 150,
+    baseColor: '#6ce0ff',
+    glow: '#99f7ff',
+    stage2: [
+      { name: '유영형', summary: '이동 속도와 회피 특화', speed: 1.15, size: 2, color: '#8ee7ff', stage3: ['질주유영형', '회피유영형', '장거리유영형'] },
+      { name: '산호형', summary: '체력과 방어 특화', speed: 0.95, size: 5, color: '#8ef7c0', stage3: ['거대산호형', '경질산호형', '재생산호형'] },
+      { name: '포식형', summary: '공격력과 돌진 특화', speed: 1.08, size: 3, color: '#ff9ecb', stage3: ['추적포식형', '돌진포식형', '군체포식형'] },
+    ],
+  },
+  abyss: {
+    label: '심해 세포',
+    baseSpeed: 100,
+    baseColor: '#7d8cff',
+    glow: '#b5b7ff',
+    stage2: [
+      { name: '심연형', summary: '압력 적응과 체력 특화', speed: 1.05, size: 5, color: '#90a9ff', stage3: ['압력적응형', '심연잠복형', '심연재생형'] },
+      { name: '괴수형', summary: '공격력과 체력 특화', speed: 0.9, size: 7, color: '#d5a6ff', stage3: ['중괴수형', '포식괴수형', '돌격괴수형'] },
+      { name: '발광형', summary: '희귀 먹이 탐색 특화', speed: 1.1, size: 3, color: '#8fffe2', stage3: ['강광발광형', '유인발광형', '탐색발광형'] },
+    ],
+  },
+};
+
+const EVOLUTION_BRANCH_MAP = {
+  질주형: { stage4: ['폭주형', '질풍형'], stage5: ['광폭종', '천풍종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  사냥형: { stage4: ['포식형', '추적형'], stage5: ['대포식종', '추적종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  유목형: { stage4: ['방랑형', '개척형'], stage5: ['대륙방랑종', '개척종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  덩굴형: { stage4: ['재생형', '거대덩굴형'], stage5: ['불멸균종', '거대목종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  거목형: { stage4: ['고목형', '세계수형'], stage5: ['고대목종', '세계수종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  균사형: { stage4: ['대균사형', '독포자형'], stage5: ['균사군체종', '맹독포자종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  갑각형: { stage4: ['중갑형', '가시갑각형'], stage5: ['중장갑종', '가시갑주종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  철갑형: { stage4: ['요새형', '전투갑각형'], stage5: ['성채종', '전쟁갑각종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  결정형: { stage4: ['마력결정형', '거대결정형'], stage5: ['마력결정종', '거대결정종'], rare: ['고대 지상종', '천둥 지상종', '태풍 지상종', '거대 지상종'], final: '대지의 지배종' },
+  질주유영형: { stage4: ['초고속유영종', '대양방랑종'], stage5: ['초고속유영종', '대양방랑종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  회피유영형: { stage4: ['회피전문종'], stage5: ['회피전문종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  장거리유영형: { stage4: ['대양방랑종'], stage5: ['대양방랑종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  거대산호형: { stage4: ['산호거체종', '해저갑주종'], stage5: ['산호거체종', '해저갑주종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  경질산호형: { stage4: ['해저갑주종'], stage5: ['해저갑주종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  재생산호형: { stage4: ['불멸산호종'], stage5: ['불멸산호종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  추적포식형: { stage4: ['해양추적종'], stage5: ['해양추적종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  돌진포식형: { stage4: ['해양돌격종'], stage5: ['해양돌격종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  군체포식형: { stage4: ['군체사냥종'], stage5: ['군체사냥종'], rare: ['폭풍 해양종', '심해적응 해양종', '거대 해양종'], final: '대양의 지배종' },
+  압력적응형: { stage4: ['초압력적응종'], stage5: ['초압력적응종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  심연잠복형: { stage4: ['심연잠복종'], stage5: ['심연잠복종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  심연재생형: { stage4: ['심연재생종'], stage5: ['심연재생종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  중괴수형: { stage4: ['대형괴수종'], stage5: ['대형괴수종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  포식괴수형: { stage4: ['심연포식종'], stage5: ['심연포식종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  돌격괴수형: { stage4: ['심연돌격종'], stage5: ['심연돌격종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  강광발광형: { stage4: ['강광발광종'], stage5: ['강광발광종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  유인발광형: { stage4: ['유혹발광종'], stage5: ['유혹발광종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+  탐색발광형: { stage4: ['심해탐색종'], stage5: ['심해탐색종'], rare: ['심연군주종', '심해포식종', '심연발광종'], final: '심연의 지배종' },
+};
+
 const WORLD_SEGMENT_MIN = 10000;
 const WORLD_SEGMENT_MAX = 15000;
 
 const state = {
+  selectedCell: null,
+  evolution: null,
+  evolutionStage: null,
+  pendingEvolution: null,
+  evolutionPath: [],
   level: 1,
   xp: 0,
   xpToNext: 30,
@@ -170,13 +278,143 @@ function populateFoodField() {
   }
 }
 
+function applyEvolutionBonuses() {
+  const cell = state.selectedCell ? EVOLUTION_TREE[state.selectedCell] : EVOLUTION_TREE.ground;
+  const baseSpeed = cell.baseSpeed + (state.level - 1) * 4;
+  const evolutionBonus = state.evolution ? state.evolution.speed : 1;
+  state.player.speed = baseSpeed * evolutionBonus;
+  state.player.color = state.evolution ? state.evolution.color : cell.baseColor;
+  state.player.glow = state.evolution ? state.evolution.color : cell.glow;
+  state.player.radius = 18 + (state.level - 1) * 2 + (state.evolution ? state.evolution.size : 0);
+}
+
+function renderEvolutionOptions() {
+  if (!state.selectedCell) {
+    return;
+  }
+
+  const cell = EVOLUTION_TREE[state.selectedCell];
+  evolutionChoices.innerHTML = '';
+
+  let options = [];
+
+  if (state.evolutionStage === 'stage2') {
+    options = cell.stage2;
+  } else if (state.evolutionStage === 'stage3' && state.pendingEvolution) {
+    options = (state.pendingEvolution.stage3 || []).map((name) => ({
+      name,
+      summary: EVOLUTION_STAGE3_PROFILES[name]?.summary || '특화 진화 경로',
+      speed: EVOLUTION_STAGE3_PROFILES[name]?.speed || 1.1,
+      size: EVOLUTION_STAGE3_PROFILES[name]?.size || 2,
+      color: EVOLUTION_STAGE3_PROFILES[name]?.color || '#ffffff',
+      stage4: EVOLUTION_STAGE3_PROFILES[name]?.stage4 || EVOLUTION_BRANCH_MAP[name]?.stage4 || [],
+      stage5: EVOLUTION_STAGE3_PROFILES[name]?.stage5 || EVOLUTION_BRANCH_MAP[name]?.stage5 || [],
+    }));
+  } else if (state.evolutionStage === 'stage4' && state.pendingEvolution) {
+    const stage4Names = EVOLUTION_BRANCH_MAP[state.pendingEvolution.name]?.stage4 || state.pendingEvolution.stage4 || [];
+    options = stage4Names.map((name) => ({
+      name,
+      summary: `${name}으로 이어지는 상위 진화`,
+      speed: 1.2,
+      size: 4,
+      color: '#ffd166',
+      stage5: EVOLUTION_BRANCH_MAP[name]?.stage5 || [],
+    }));
+  } else if (state.evolutionStage === 'stage5' && state.pendingEvolution) {
+    const stage5Names = EVOLUTION_BRANCH_MAP[state.pendingEvolution.name]?.stage5 || state.pendingEvolution.stage5 || [];
+    options = stage5Names.map((name) => ({
+      name,
+      summary: `${name}으로 이어지는 고급 진화`,
+      speed: 1.36,
+      size: 5,
+      color: '#8fffe0',
+    }));
+  }
+
+  options.forEach((option) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'cell-card';
+    button.innerHTML = `
+      <span class="cell-name">${option.name}</span>
+      <span class="cell-detail">${option.summary}</span>
+      ${state.evolutionStage === 'stage2' ? `<span class="cell-detail">분기: ${option.stage3.join(', ')}</span>` : ''}
+      ${state.evolutionStage === 'stage3' ? `<span class="cell-detail">후속: ${Array.isArray(option.stage4) ? option.stage4.join(', ') : '진화 경로'}</span>` : ''}
+      ${state.evolutionStage === 'stage4' ? '<span class="cell-detail">상위 진화 경로</span>' : ''}
+      ${state.evolutionStage === 'stage5' ? '<span class="cell-detail">고급 진화</span>' : ''}
+    `;
+
+    button.addEventListener('click', () => {
+      if (state.evolutionStage === 'stage2') {
+        state.pendingEvolution = option;
+        state.evolutionPath = [option.name];
+        state.evolutionStage = 'stage3';
+        evolutionStageText.textContent = '특화 진화';
+        evolutionLevelText.textContent = '4';
+        renderEvolutionOptions();
+        return;
+      }
+
+      if (state.evolutionStage === 'stage3') {
+        state.pendingEvolution = option;
+        state.evolutionPath = [...(state.evolutionPath || []), option.name];
+        state.evolutionStage = 'stage4';
+        evolutionStageText.textContent = '상위 진화';
+        evolutionLevelText.textContent = '5';
+        renderEvolutionOptions();
+        return;
+      }
+
+      if (state.evolutionStage === 'stage4') {
+        state.pendingEvolution = option;
+        state.evolutionPath = [...(state.evolutionPath || []), option.name];
+        state.evolutionStage = 'stage5';
+        evolutionStageText.textContent = '고급 진화';
+        evolutionLevelText.textContent = '6';
+        renderEvolutionOptions();
+        return;
+      }
+
+      if (state.evolutionStage === 'stage5') {
+        state.evolution = option;
+        state.evolutionPath = [...(state.evolutionPath || []), option.name];
+        applyEvolutionBonuses();
+        evolutionOverlay.classList.add('hidden');
+        state.evolutionStage = null;
+        state.pendingEvolution = null;
+        updateHud();
+      }
+    });
+
+    evolutionChoices.appendChild(button);
+  });
+}
+
+function showEvolutionPanel() {
+  if (!state.selectedCell || state.evolution) {
+    return;
+  }
+
+  state.evolutionStage = 'stage2';
+  state.pendingEvolution = null;
+  state.evolutionPath = [];
+  evolutionStageText.textContent = '초기 진화';
+  evolutionLevelText.textContent = '3';
+  renderEvolutionOptions();
+  evolutionOverlay.classList.remove('hidden');
+}
+
 function levelUpIfNeeded() {
   while (state.xp >= state.xpToNext) {
     state.xp -= state.xpToNext;
     state.level += 1;
     state.xpToNext = Math.round(state.xpToNext * 1.45);
-    state.player.radius = 18 + (state.level - 1) * 2;
-    state.player.speed = 120 + (state.level - 1) * 4;
+
+    if (state.level >= 3 && !state.evolution) {
+      showEvolutionPanel();
+    }
+
+    applyEvolutionBonuses();
   }
 }
 
@@ -186,6 +424,12 @@ function updateHud() {
   const currentBiome = getBiomeName(state.player.x);
   biomeLabel.textContent = currentBiome;
   distanceLabel.textContent = `${Math.floor(Math.abs(state.player.x))}m`;
+
+  const selectedCellName = state.selectedCell ? EVOLUTION_TREE[state.selectedCell].label : '미선택';
+  const evolutionName = state.evolution ? state.evolution.name : (state.pendingEvolution ? state.pendingEvolution.name : '기본 세포');
+  const evolutionPathText = state.evolutionPath.length ? ` / ${state.evolutionPath.join(' → ')}` : '';
+  cellStatusText.textContent = selectedCellName;
+  evolutionStatusText.textContent = `${evolutionName}${evolutionPathText}`;
 }
 
 function findNearestFood() {
@@ -276,6 +520,33 @@ joystickBase.addEventListener('pointercancel', () => {
   state.touchPointerId = null;
   resetJoystick();
 });
+
+function selectCell(cellKey) {
+  const profile = EVOLUTION_TREE[cellKey];
+  if (!profile) {
+    return;
+  }
+
+  state.selectedCell = cellKey;
+  state.evolution = null;
+  state.player.color = profile.baseColor;
+  state.player.glow = profile.glow;
+  cellSelectOverlay.classList.add('hidden');
+  applyEvolutionBonuses();
+  updateHud();
+}
+
+function bindCellSelection() {
+  document.querySelectorAll('.cell-card[data-cell]').forEach((button) => {
+    const cellKey = button.dataset.cell;
+    button.addEventListener('click', () => {
+      if (!cellKey) {
+        return;
+      }
+      selectCell(cellKey);
+    });
+  });
+}
 
 function update(dt) {
   ensureWorldCoverage();
@@ -447,9 +718,11 @@ function gameLoop(timestamp) {
 }
 
 window.addEventListener('resize', resizeCanvas);
+bindCellSelection();
 
 resizeCanvas();
 ensureWorldCoverage();
 populateFoodField();
+applyEvolutionBonuses();
 updateHud();
 requestAnimationFrame(gameLoop);

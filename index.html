@@ -22,6 +22,10 @@
           <span id="biomeLabel">초원</span>
           <span id="distanceLabel">0m</span>
         </div>
+        <div class="hud-row evolution-status">
+          <span id="cellStatusText">미선택</span>
+          <span id="evolutionStatusText">기본 세포</span>
+        </div>
       </header>
 
       <canvas id="gameCanvas"></canvas>
@@ -29,6 +33,35 @@
       <div id="joystickZone" aria-label="movement joystick">
         <div id="joystickBase">
           <div id="joystickKnob"></div>
+        </div>
+      </div>
+
+      <div id="cellSelectOverlay" class="overlay visible">
+        <div class="selection-panel">
+          <h2>세포 선택</h2>
+          <p>시작할 세포를 선택하세요.</p>
+          <div class="cell-grid">
+            <button class="cell-card" data-cell="ground" type="button">
+              <span class="cell-name">지상 세포</span>
+              <span class="cell-detail">균형형 · 육지 중심</span>
+            </button>
+            <button class="cell-card" data-cell="ocean" type="button">
+              <span class="cell-name">해양 세포</span>
+              <span class="cell-detail">기동형 · 바다 중심</span>
+            </button>
+            <button class="cell-card" data-cell="abyss" type="button">
+              <span class="cell-name">심해 세포</span>
+              <span class="cell-detail">고위험 · 고보상</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="evolutionOverlay" class="overlay hidden">
+        <div class="selection-panel">
+          <h2>진화 선택</h2>
+          <p><span id="evolutionStageText">초기 진화</span> 단계: 레벨 <span id="evolutionLevelText">3</span> 도달! 세포를 진화시켜 주세요.</p>
+          <div id="evolutionChoices" class="cell-grid"></div>
         </div>
       </div>
     </div>

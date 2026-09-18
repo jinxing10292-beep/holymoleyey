@@ -54,6 +54,77 @@ body {
   background: linear-gradient(180deg, rgba(5, 13, 25, 0.85), rgba(5, 13, 25, 0));
 }
 
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 8, 14, 0.56);
+  backdrop-filter: blur(4px);
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.selection-panel {
+  width: min(86vw, 360px);
+  background: rgba(8, 17, 28, 0.9);
+  border: 1px solid rgba(126, 247, 166, 0.25);
+  border-radius: 18px;
+  padding: 20px 18px 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.38);
+}
+
+.selection-panel h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.selection-panel p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.cell-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.cell-card {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(25, 43, 59, 0.9), rgba(8, 18, 31, 0.95));
+  border-radius: 14px;
+  color: var(--text);
+  padding: 14px 12px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.cell-card:hover,
+.cell-card:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(94, 226, 255, 0.8);
+}
+
+.cell-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.cell-detail {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .hud-row {
   display: flex;
   align-items: center;
@@ -105,6 +176,17 @@ body {
 .metadata {
   justify-content: space-between;
   font-size: 0.82rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.evolution-status {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
   color: var(--muted);
   letter-spacing: 0.04em;
 }
